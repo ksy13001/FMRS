@@ -17,7 +17,7 @@ public class TechnicalAttributes {
     @Column(name = "first_touch")
     private int firstTouch;
     @Column(name = "free_kick_taking")
-    private int freeKincks;
+    private int freeKicks;
     private int heading;
     @Column(name = "long_shots")
     private int longShots;
