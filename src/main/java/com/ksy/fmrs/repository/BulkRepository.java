@@ -93,7 +93,7 @@ public class BulkRepository {
                 ps.setInt(14, fmPlayer.getTechnicalAttributes().getDribbling());
                 ps.setInt(15, fmPlayer.getTechnicalAttributes().getFinishing());
                 ps.setInt(16, fmPlayer.getTechnicalAttributes().getFirstTouch());
-                ps.setInt(17, fmPlayer.getTechnicalAttributes().getFreeKincks());
+                ps.setInt(17, fmPlayer.getTechnicalAttributes().getFreeKicks());
                 ps.setInt(18, fmPlayer.getTechnicalAttributes().getHeading());
                 ps.setInt(19, fmPlayer.getTechnicalAttributes().getLongShots());
                 ps.setInt(20, fmPlayer.getTechnicalAttributes().getLongThrows());

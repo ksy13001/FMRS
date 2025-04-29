@@ -106,7 +106,7 @@ public class FmUtils {
                 .dribbling(technicalAttributesDto.getDribbling())
                 .finishing(technicalAttributesDto.getFinishing())
                 .firstTouch(technicalAttributesDto.getFirstTouch())
-                .freeKincks(technicalAttributesDto.getFreekicks())
+                .freeKicks(technicalAttributesDto.getFreekicks())
                 .heading(technicalAttributesDto.getHeading())
                 .longShots(technicalAttributesDto.getLongShots())
                 .longThrows(technicalAttributesDto.getLongthrows())
