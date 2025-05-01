@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${player.name + ' - Player Profile | FMRS'}">Player Profile | FMRS</title>
+    <title th:text="${player != null && player.fmPlayerDetailsDto != null ? player.fmPlayerDetailsDto.name + ' - Player Profile | FMRS' : 'Player Profile | FMRS'}">Player Profile | FMRS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/lucide-static@0.321.0/font/lucide.min.css" rel="stylesheet">
     <style>
@@ -21,6 +21,27 @@
         .stat-bar-fill-orange { background-color: #f97316; }
         .stat-bar-fill-emerald { background-color: #10b981; }
         .stat-item:hover { background-color: #f1f5f9; }
+
+        /* Position map styles */
+        .position-map {
+            width: 100%;
+            aspect-ratio: 3/2;
+            background-color: #111111;
+            border-radius: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .position-indicator {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            left: 10px;
+        }
+
+        .position-gray { background-color: #6B7280; }
+        .position-yellow { background-color: #FBBF24; }
+        .position-green { background-color: #34D399; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col text-xs">
@@ -42,8 +63,8 @@
 <!-- Hero Section -->
 <section class="hero-gradient text-white py-4">
     <div class="w-full max-w-7xl mx-auto px-2">
-        <h1 class="text-2xl font-bold mb-0.5" th:text="${player.name}">Player Name</h1>
-        <p class="text-base text-slate-300" th:text="${player.teamName + ' - ' + player.position}">Team - Position</p>
+        <h1 class="text-2xl font-bold mb-0.5" th:text="${player != null && player.fmPlayerDetailsDto != null ? player.fmPlayerDetailsDto.name : 'Player Name'}">Player Name</h1>
+        <p class="text-base text-slate-300" th:text="${player != null && player.playerDetailsDto != null ? player.playerDetailsDto.teamName : 'Team'}">Team</p>
     </div>
 </section>
 
@@ -55,21 +76,43 @@
             <div class="flex flex-col sm:flex-row items-start gap-3 mb-4">
                 <div class="relative group">
                     <div class="w-24 h-24 rounded-lg overflow-hidden bg-slate-200 border border-slate-400 shadow-sm transition-transform duration-300 transform group-hover:scale-105">
-                        <img th:src="${player.imageUrl}" th:alt="${player.name}" class="w-full h-full object-cover">
+                        <img th:src="${player != null && player.playerDetailsDto != null ? player.playerDetailsDto.imageUrl : ''}"
+                             th:alt="${player != null && player.playerDetailsDto != null ? player.playerDetailsDto.name : 'Player'}"
+                             class="w-full h-full object-cover">
                     </div>
                 </div>
 
                 <div class="flex-grow">
                     <div class="sm:flex justify-between items-start mb-2">
                         <div>
-                            <h2 class="text-xl font-bold mb-0.5 text-slate-800" th:text="${player.name}">Player Name</h2>
-                            <p class="text-base text-slate-600" th:text="${player.position}">Position</p>
+                            <h2 class="text-xl font-bold mb-0.5 text-slate-800"
+                                th:text="${player != null && player.fmPlayerDetailsDto != null ? player.fmPlayerDetailsDto.name : 'Player Name'}">Player Name</h2>
+
+                            <!-- Best Position Display -->
+                            <p class="text-base text-slate-600" th:if="${player != null && player.fmPlayerDetailsDto != null}">
+                                <span th:with="pos=${player.fmPlayerDetailsDto.position}" th:remove="tag">
+                                    <span th:if="${pos != null && pos.goalkeeper >= 15}">Goalkeeper</span>
+                                    <span th:if="${pos != null && pos.defenderCentral >= 15}">Center Back</span>
+                                    <span th:if="${pos != null && pos.defenderLeft >= 15}">Left Back</span>
+                                    <span th:if="${pos != null && pos.defenderRight >= 15}">Right Back</span>
+                                    <span th:if="${pos != null && pos.wingBackLeft >= 15}">Left Wing Back</span>
+                                    <span th:if="${pos != null && pos.wingBackRight >= 15}">Right Wing Back</span>
+                                    <span th:if="${pos != null && pos.defensiveMidfielder >= 15}">Defensive Midfielder</span>
+                                    <span th:if="${pos != null && pos.midfielderCentral >= 15}">Central Midfielder</span>
+                                    <span th:if="${pos != null && pos.midfielderLeft >= 15}">Left Midfielder</span>
+                                    <span th:if="${pos != null && pos.midfielderRight >= 15}">Right Midfielder</span>
+                                    <span th:if="${pos != null && pos.attackingMidCentral >= 15}">Attacking Midfielder</span>
+                                    <span th:if="${pos != null && pos.attackingMidLeft >= 15}">Left Winger</span>
+                                    <span th:if="${pos != null && pos.attackingMidRight >= 15}">Right Winger</span>
+                                    <span th:if="${pos != null && pos.striker >= 15}">Striker</span>
+                                </span>
+                            </p>
                         </div>
                         <div class="mt-1 sm:mt-0">
                             <div class="px-2 py-1 bg-emerald-100 rounded-lg text-center">
-                                <div class="text-xs text-slate-600">Market Value</div>
+                                <div class="text-xs text-slate-600">Current Ability</div>
                                 <div class="text-sm font-bold text-emerald-600">
-                                    €<span th:text="${#numbers.formatDecimal(player.marketValue / 1000000, 1, 'COMMA', 2, 'POINT')}">50.00</span>M
+                                    <span th:text="${player != null && player.fmPlayerDetailsDto != null ? player.fmPlayerDetailsDto.currentAbility : '0'}">0</span>
                                 </div>
                             </div>
                         </div>
@@ -79,67 +122,117 @@
                         <div class="space-y-0.5">
                             <div class="flex items-center gap-1 text-slate-700">
                                 <i class="icon icon-calendar-days text-emerald-500"></i>
-                                <span>Age: <span th:text="${player.age}">30</span>
-                                   (DOB: <span th:text="${#temporals.format(player.birth, 'MMM d, yyyy')}">Jan 1, 1990</span>)
+                                <span>Age: <span th:text="${player != null && player.playerDetailsDto != null ? player.playerDetailsDto.age : '0'}">30</span>
+                                   (DOB: <span th:text="${player != null && player.playerDetailsDto != null && player.playerDetailsDto.birth != null ?
+                                                #temporals.format(player.playerDetailsDto.birth, 'MMM d, yyyy') : 'Unknown'}">Jan 1, 1990</span>)
                                </span>
                             </div>
                             <div class="flex items-center gap-1 text-slate-700">
                                 <i class="icon icon-ruler text-emerald-500"></i>
-                                <span>Height: <span th:text="${player.height + ' cm'}">180 cm</span></span>
+                                <span>Height: <span th:text="${player != null && player.playerDetailsDto != null ? player.playerDetailsDto.height + ' cm' : '0 cm'}">180 cm</span></span>
                             </div>
                             <div class="flex items-center gap-1 text-slate-700">
                                 <i class="icon icon-weight text-emerald-500"></i>
-                                <span>Weight: <span th:text="${player.weight + ' kg'}">75 kg</span></span>
+                                <span>Weight: <span th:text="${player != null && player.playerDetailsDto != null ? player.playerDetailsDto.weight + ' kg' : '0 kg'}">75 kg</span></span>
                             </div>
                         </div>
                         <div class="space-y-0.5">
                             <div class="flex items-center gap-1 text-slate-700">
                                 <i class="icon icon-users text-emerald-500"></i>
-                                <span>Team: <span th:text="${player.teamName}">Team Name</span></span>
+                                <span>Team: <span th:text="${player != null && player.playerDetailsDto != null ? player.playerDetailsDto.teamName : 'Unknown'}">Team Name</span></span>
                             </div>
                             <div class="flex items-center gap-1 text-slate-700">
                                 <i class="icon icon-flag text-emerald-500"></i>
-                                <span>Nationality: <span th:text="${player.nationName}">Nation</span></span>
+                                <span>Nationality: <span th:text="${player != null && player.playerDetailsDto != null ? player.playerDetailsDto.nationName : 'Unknown'}">Nation</span></span>
+                            </div>
+                            <div class="flex items-center gap-1 text-slate-700">
+                                <i class="icon icon-star text-emerald-500"></i>
+                                <span>Potential: <span th:text="${player != null && player.fmPlayerDetailsDto != null ? player.fmPlayerDetailsDto.potentialAbility : '0'}">0</span></span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Real Football Statistics -->
-            <div class="bg-slate-50 rounded-xl p-2 mb-3">
-                <h3 class="font-semibold mb-1 flex items-center gap-1 text-sm text-slate-800">
-                    <i class="icon icon-activity text-emerald-500"></i>
-                    Season Statistics
-                </h3>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <div class="bg-white rounded-lg p-1 shadow-sm">
-                        <div class="flex items-center gap-1 mb-0.5">
-                            <i class="icon icon-play-circle text-emerald-500"></i>
-                            <span class="text-xs text-slate-600">Games</span>
+            <!-- Season Statistics -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <!-- Season Statistics -->
+                <div class="bg-slate-50 rounded-xl p-2">
+                    <h3 class="font-semibold mb-1 flex items-center gap-1 text-sm text-slate-800">
+                        <i class="icon icon-activity text-emerald-500"></i>
+                        Season Statistics
+                    </h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-white rounded-lg p-1 shadow-sm">
+                            <div class="flex items-center gap-1 mb-0.5">
+                                <i class="icon icon-play-circle text-emerald-500"></i>
+                                <span class="text-xs text-slate-600">Games</span>
+                            </div>
+                            <span class="text-sm font-bold text-slate-800"
+                                  th:with="games=${player != null && player.playerStatDto != null && player.playerStatDto.gamesPlayed != null ? player.playerStatDto.gamesPlayed : '0'},
+                           subs=${player != null && player.playerStatDto != null && player.playerStatDto.substitutes != null ? player.playerStatDto.substitutes : '0'}"
+                                  th:text="${games + '(' + subs + ')'}">0(0)</span>
                         </div>
-                        <span class="text-sm font-bold text-slate-800" th:text="${realFootballStat.gamesPlayed}">0</span>
+                        <div class="bg-white rounded-lg p-1 shadow-sm">
+                            <div class="flex items-center gap-1 mb-0.5">
+                                <i class="icon icon-ball-football text-emerald-500"></i>
+                                <span class="text-xs text-slate-600">Goals</span>
+                            </div>
+                            <span class="text-sm font-bold text-slate-800"
+                                  th:with="goals=${player != null && player.playerStatDto != null && player.playerStatDto.goal != null ? player.playerStatDto.goal : '0'},
+                           pk=${player != null && player.playerStatDto != null && player.playerStatDto.pk != null ? player.playerStatDto.pk : '0'}"
+                                  th:text="${goals + '(' + pk + ')'}">0(0)</span>
+                        </div>
+                        <div class="bg-white rounded-lg p-1 shadow-sm">
+                            <div class="flex items-center gap-1 mb-0.5">
+                                <i class="icon icon-footprints text-emerald-500"></i>
+                                <span class="text-xs text-slate-600">Assists</span>
+                            </div>
+                            <span class="text-sm font-bold text-slate-800"
+                                  th:text="${player != null && player.playerStatDto != null && player.playerStatDto.assist != null ? player.playerStatDto.assist : '0'}">0</span>
+                        </div>
+                        <div class="bg-white rounded-lg p-1 shadow-sm">
+                            <div class="flex items-center gap-1 mb-0.5">
+                                <i class="icon icon-star text-emerald-500"></i>
+                                <span class="text-xs text-slate-600">Rating</span>
+                            </div>
+                            <span class="text-sm font-bold text-slate-800"
+                                  th:text="${player != null && player.playerStatDto != null && player.playerStatDto.rating != null ? player.playerStatDto.rating : '0.0'}">0.0</span>
+                        </div>
+                        <div class="bg-white rounded-lg p-1 shadow-sm">
+                            <div class="flex items-center gap-1 mb-0.5">
+                                <i class="icon icon-square text-yellow-500"></i>
+                                <span class="text-xs text-slate-600">Yellow Cards</span>
+                            </div>
+                            <span class="text-sm font-bold text-slate-800"
+                                  th:text="${player != null && player.playerStatDto != null && player.playerStatDto.yellowCards != null ? player.playerStatDto.yellowCards : '0'}">0</span>
+                        </div>
+                        <div class="bg-white rounded-lg p-1 shadow-sm">
+                            <div class="flex items-center gap-1 mb-0.5">
+                                <i class="icon icon-square text-red-500"></i>
+                                <span class="text-xs text-slate-600">Red Cards</span>
+                            </div>
+                            <span class="text-sm font-bold text-slate-800"
+                                  th:text="${player != null && player.playerStatDto != null && player.playerStatDto.redCards != null ? player.playerStatDto.redCards : '0'}">0</span>
+                        </div>
                     </div>
-                    <div class="bg-white rounded-lg p-1 shadow-sm">
-                        <div class="flex items-center gap-1 mb-0.5">
-                            <i class="icon icon-ball-football text-emerald-500"></i>
-                            <span class="text-xs text-slate-600">Goals</span>
+                </div>
+
+                <!-- Position Map -->
+                <div class="bg-slate-50 rounded-xl p-2" th:if="${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.position != null}">
+                    <h3 class="font-semibold mb-1 flex items-center gap-1 text-sm text-slate-800">
+                        <i class="icon icon-layout text-emerald-500"></i>
+                        Position
+                    </h3>
+                    <div class="flex justify-center items-center">
+                        <div id="position-map-container" class="w-full max-w-xs">
+                            <canvas id="position-map" class="w-full"></canvas>
                         </div>
-                        <span class="text-sm font-bold text-slate-800" th:text="${realFootballStat.goal}">0</span>
                     </div>
-                    <div class="bg-white rounded-lg p-1 shadow-sm">
-                        <div class="flex items-center gap-1 mb-0.5">
-                            <i class="icon icon-footprints text-emerald-500"></i>
-                            <span class="text-xs text-slate-600">Assists</span>
-                        </div>
-                        <span class="text-sm font-bold text-slate-800" th:text="${realFootballStat.assist}">0</span>
-                    </div>
-                    <div class="bg-white rounded-lg p-1 shadow-sm">
-                        <div class="flex items-center gap-1 mb-0.5">
-                            <i class="icon icon-star text-emerald-500"></i>
-                            <span class="text-xs text-slate-600">Rating</span>
-                        </div>
-                        <span class="text-sm font-bold text-slate-800" th:text="${realFootballStat.rating}">0.0</span>
+                    <div class="mt-2 text-center text-xs text-slate-500">
+                        <span class="inline-block px-1 mx-1"><span class="inline-block w-2 h-2 bg-gray-500 rounded-sm mr-1"></span> &lt;10</span>
+                        <span class="inline-block px-1 mx-1"><span class="inline-block w-2 h-2 bg-yellow-400 rounded-sm mr-1"></span> 10-14</span>
+                        <span class="inline-block px-1 mx-1"><span class="inline-block w-2 h-2 bg-green-400 rounded-sm mr-1"></span> 15-20</span>
                     </div>
                 </div>
             </div>
@@ -153,20 +246,20 @@
                         Technical
                     </h3>
                     <div class="space-y-0.5">
-                        <div th:replace=":: attribute('Corners', ${player.corners})"></div>
-                        <div th:replace=":: attribute('Crossing', ${player.crossing})"></div>
-                        <div th:replace=":: attribute('Dribbling', ${player.dribbling})"></div>
-                        <div th:replace=":: attribute('Finishing', ${player.finishing})"></div>
-                        <div th:replace=":: attribute('First Touch', ${player.firstTouch})"></div>
-                        <div th:replace=":: attribute('Free Kick Taking', ${player.freeKickTaking})"></div>
-                        <div th:replace=":: attribute('Heading', ${player.heading})"></div>
-                        <div th:replace=":: attribute('Long Shots', ${player.longShots})"></div>
-                        <div th:replace=":: attribute('Long Throws', ${player.longThrows})"></div>
-                        <div th:replace=":: attribute('Marking', ${player.marking})"></div>
-                        <div th:replace=":: attribute('Passing', ${player.passing})"></div>
-                        <div th:replace=":: attribute('Penalty Taking', ${player.penaltyTaking})"></div>
-                        <div th:replace=":: attribute('Tackling', ${player.tackling})"></div>
-                        <div th:replace=":: attribute('Technique', ${player.technique})"></div>
+                        <div th:replace=":: attribute('Corners', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.technicalAttributes != null ? player.fmPlayerDetailsDto.technicalAttributes.corners : null})"></div>
+                        <div th:replace=":: attribute('Crossing', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.technicalAttributes != null ? player.fmPlayerDetailsDto.technicalAttributes.crossing : null})"></div>
+                        <div th:replace=":: attribute('Dribbling', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.technicalAttributes != null ? player.fmPlayerDetailsDto.technicalAttributes.dribbling : null})"></div>
+                        <div th:replace=":: attribute('Finishing', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.technicalAttributes != null ? player.fmPlayerDetailsDto.technicalAttributes.finishing : null})"></div>
+                        <div th:replace=":: attribute('First Touch', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.technicalAttributes != null ? player.fmPlayerDetailsDto.technicalAttributes.firstTouch : null})"></div>
+                        <div th:replace=":: attribute('Free Kick Taking', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.technicalAttributes != null ? player.fmPlayerDetailsDto.technicalAttributes.freeKicks : null})"></div>
+                        <div th:replace=":: attribute('Heading', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.technicalAttributes != null ? player.fmPlayerDetailsDto.technicalAttributes.heading : null})"></div>
+                        <div th:replace=":: attribute('Long Shots', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.technicalAttributes != null ? player.fmPlayerDetailsDto.technicalAttributes.longShots : null})"></div>
+                        <div th:replace=":: attribute('Long Throws', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.technicalAttributes != null ? player.fmPlayerDetailsDto.technicalAttributes.longThrows : null})"></div>
+                        <div th:replace=":: attribute('Marking', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.technicalAttributes != null ? player.fmPlayerDetailsDto.technicalAttributes.marking : null})"></div>
+                        <div th:replace=":: attribute('Passing', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.technicalAttributes != null ? player.fmPlayerDetailsDto.technicalAttributes.passing : null})"></div>
+                        <div th:replace=":: attribute('Penalty Taking', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.technicalAttributes != null ? player.fmPlayerDetailsDto.technicalAttributes.penaltyTaking : null})"></div>
+                        <div th:replace=":: attribute('Tackling', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.technicalAttributes != null ? player.fmPlayerDetailsDto.technicalAttributes.tackling : null})"></div>
+                        <div th:replace=":: attribute('Technique', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.technicalAttributes != null ? player.fmPlayerDetailsDto.technicalAttributes.technique : null})"></div>
                     </div>
                 </div>
 
@@ -177,20 +270,20 @@
                         Mental
                     </h3>
                     <div class="space-y-0.5">
-                        <div th:replace=":: attribute('Aggression', ${player.aggression})"></div>
-                        <div th:replace=":: attribute('Anticipation', ${player.anticipation})"></div>
-                        <div th:replace=":: attribute('Bravery', ${player.bravery})"></div>
-                        <div th:replace=":: attribute('Composure', ${player.composure})"></div>
-                        <div th:replace=":: attribute('Concentration', ${player.concentration})"></div>
-                        <div th:replace=":: attribute('Decisions', ${player.decisions})"></div>
-                        <div th:replace=":: attribute('Determination', ${player.determination})"></div>
-                        <div th:replace=":: attribute('Flair', ${player.flair})"></div>
-                        <div th:replace=":: attribute('Leadership', ${player.leadership})"></div>
-                        <div th:replace=":: attribute('Off The Ball', ${player.offTheBall})"></div>
-                        <div th:replace=":: attribute('Positioning', ${player.positioning})"></div>
-                        <div th:replace=":: attribute('Teamwork', ${player.teamwork})"></div>
-                        <div th:replace=":: attribute('Vision', ${player.vision})"></div>
-                        <div th:replace=":: attribute('Work Rate', ${player.workRate})"></div>
+                        <div th:replace=":: attribute('Aggression', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.mentalAttributes != null ? player.fmPlayerDetailsDto.mentalAttributes.aggression : null})"></div>
+                        <div th:replace=":: attribute('Anticipation', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.mentalAttributes != null ? player.fmPlayerDetailsDto.mentalAttributes.anticipation : null})"></div>
+                        <div th:replace=":: attribute('Bravery', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.mentalAttributes != null ? player.fmPlayerDetailsDto.mentalAttributes.bravery : null})"></div>
+                        <div th:replace=":: attribute('Composure', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.mentalAttributes != null ? player.fmPlayerDetailsDto.mentalAttributes.composure : null})"></div>
+                        <div th:replace=":: attribute('Concentration', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.mentalAttributes != null ? player.fmPlayerDetailsDto.mentalAttributes.concentration : null})"></div>
+                        <div th:replace=":: attribute('Decisions', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.mentalAttributes != null ? player.fmPlayerDetailsDto.mentalAttributes.decisions : null})"></div>
+                        <div th:replace=":: attribute('Determination', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.mentalAttributes != null ? player.fmPlayerDetailsDto.mentalAttributes.determination : null})"></div>
+                        <div th:replace=":: attribute('Flair', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.mentalAttributes != null ? player.fmPlayerDetailsDto.mentalAttributes.flair : null})"></div>
+                        <div th:replace=":: attribute('Leadership', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.mentalAttributes != null ? player.fmPlayerDetailsDto.mentalAttributes.leadership : null})"></div>
+                        <div th:replace=":: attribute('Off The Ball', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.mentalAttributes != null ? player.fmPlayerDetailsDto.mentalAttributes.offTheBall : null})"></div>
+                        <div th:replace=":: attribute('Positioning', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.mentalAttributes != null ? player.fmPlayerDetailsDto.mentalAttributes.positioning : null})"></div>
+                        <div th:replace=":: attribute('Teamwork', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.mentalAttributes != null ? player.fmPlayerDetailsDto.mentalAttributes.teamwork : null})"></div>
+                        <div th:replace=":: attribute('Vision', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.mentalAttributes != null ? player.fmPlayerDetailsDto.mentalAttributes.vision : null})"></div>
+                        <div th:replace=":: attribute('Work Rate', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.mentalAttributes != null ? player.fmPlayerDetailsDto.mentalAttributes.workRate : null})"></div>
                     </div>
                 </div>
 
@@ -201,14 +294,14 @@
                         Physical
                     </h3>
                     <div class="space-y-0.5">
-                        <div th:replace=":: attribute('Acceleration', ${player.acceleration})"></div>
-                        <div th:replace=":: attribute('Agility', ${player.agility})"></div>
-                        <div th:replace=":: attribute('Balance', ${player.balance})"></div>
-                        <div th:replace=":: attribute('Jumping Reach', ${player.jumpingReach})"></div>
-                        <div th:replace=":: attribute('Natural Fitness', ${player.naturalFitness})"></div>
-                        <div th:replace=":: attribute('Pace', ${player.pace})"></div>
-                        <div th:replace=":: attribute('Stamina', ${player.stamina})"></div>
-                        <div th:replace=":: attribute('Strength', ${player.strength})"></div>
+                        <div th:replace=":: attribute('Acceleration', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.physicalAttributes != null ? player.fmPlayerDetailsDto.physicalAttributes.acceleration : null})"></div>
+                        <div th:replace=":: attribute('Agility', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.physicalAttributes != null ? player.fmPlayerDetailsDto.physicalAttributes.agility : null})"></div>
+                        <div th:replace=":: attribute('Balance', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.physicalAttributes != null ? player.fmPlayerDetailsDto.physicalAttributes.balance : null})"></div>
+                        <div th:replace=":: attribute('Jumping Reach', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.physicalAttributes != null ? player.fmPlayerDetailsDto.physicalAttributes.jumpingReach : null})"></div>
+                        <div th:replace=":: attribute('Natural Fitness', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.physicalAttributes != null ? player.fmPlayerDetailsDto.physicalAttributes.naturalFitness : null})"></div>
+                        <div th:replace=":: attribute('Pace', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.physicalAttributes != null ? player.fmPlayerDetailsDto.physicalAttributes.pace : null})"></div>
+                        <div th:replace=":: attribute('Stamina', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.physicalAttributes != null ? player.fmPlayerDetailsDto.physicalAttributes.stamina : null})"></div>
+                        <div th:replace=":: attribute('Strength', ${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.physicalAttributes != null ? player.fmPlayerDetailsDto.physicalAttributes.strength : null})"></div>
                     </div>
                 </div>
             </div>
@@ -266,6 +359,92 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript for position map -->
+<script th:if="${player != null && player.fmPlayerDetailsDto != null && player.fmPlayerDetailsDto.position != null}">
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('position-map-container');
+        const canvas = document.getElementById('position-map');
+
+        // Set canvas dimensions with 3:2 aspect ratio
+        const containerWidth = container.clientWidth;
+        const canvasHeight = containerWidth * (2/3);
+        canvas.width = containerWidth;
+        canvas.height = canvasHeight;
+        canvas.style.height = canvasHeight + 'px';
+
+        const ctx = canvas.getContext('2d');
+
+        // Draw field background
+        ctx.fillStyle = '#111111';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw field markings with very subtle gray lines
+        ctx.strokeStyle = '#333333';
+        ctx.lineWidth = 1;
+
+        // Field outline
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+        // Center line
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 2, 0);
+        ctx.lineTo(canvas.width / 2, canvas.height);
+        ctx.stroke();
+
+        // Center circle
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height / 2, canvas.height / 6, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Goal areas
+        const goalAreaWidth = canvas.width / 10;
+        const goalAreaHeight = canvas.height / 3;
+        const goalAreaY = canvas.height / 2 - goalAreaHeight / 2;
+
+        // Left goal area
+        ctx.strokeRect(0, goalAreaY, goalAreaWidth, goalAreaHeight);
+
+        // Right goal area
+        ctx.strokeRect(canvas.width - goalAreaWidth, goalAreaY, goalAreaWidth, goalAreaHeight);
+
+        // Position data - all concentrated on the left side
+        const positions = [
+            { name: 'striker', value: [[${player.fmPlayerDetailsDto.position.striker}]], y: canvas.height * 0.1 },
+            { name: 'attackingMidLeft', value: [[${player.fmPlayerDetailsDto.position.attackingMidLeft}]], y: canvas.height * 0.2 },
+            { name: 'attackingMidCentral', value: [[${player.fmPlayerDetailsDto.position.attackingMidCentral}]], y: canvas.height * 0.25 },
+            { name: 'attackingMidRight', value: [[${player.fmPlayerDetailsDto.position.attackingMidRight}]], y: canvas.height * 0.3 },
+            { name: 'midfielderLeft', value: [[${player.fmPlayerDetailsDto.position.midfielderLeft}]], y: canvas.height * 0.35 },
+            { name: 'midfielderCentral', value: [[${player.fmPlayerDetailsDto.position.midfielderCentral}]], y: canvas.height * 0.4 },
+            { name: 'midfielderRight', value: [[${player.fmPlayerDetailsDto.position.midfielderRight}]], y: canvas.height * 0.45 },
+            { name: 'defensiveMidfielder', value: [[${player.fmPlayerDetailsDto.position.defensiveMidfielder}]], y: canvas.height * 0.5 },
+            { name: 'wingBackLeft', value: [[${player.fmPlayerDetailsDto.position.wingBackLeft}]], y: canvas.height * 0.55 },
+            { name: 'wingBackRight', value: [[${player.fmPlayerDetailsDto.position.wingBackRight}]], y: canvas.height * 0.6 },
+            { name: 'defenderLeft', value: [[${player.fmPlayerDetailsDto.position.defenderLeft}]], y: canvas.height * 0.65 },
+            { name: 'defenderCentral', value: [[${player.fmPlayerDetailsDto.position.defenderCentral}]], y: canvas.height * 0.7 },
+            { name: 'defenderRight', value: [[${player.fmPlayerDetailsDto.position.defenderRight}]], y: canvas.height * 0.75 },
+            { name: 'goalkeeper', value: [[${player.fmPlayerDetailsDto.position.goalkeeper}]], y: canvas.height * 0.85 }
+        ];
+
+        // Draw position indicators - all on the left side
+        const squareSize = Math.min(canvas.width, canvas.height) * 0.06;
+        const leftMargin = canvas.width * 0.05; // 5% from the left edge
+
+        positions.forEach(pos => {
+            if (pos.value > 0) {
+                // Determine color based on value
+                if (pos.value < 10) {
+                    ctx.fillStyle = '#6B7280'; // gray-500
+                } else if (pos.value < 15) {
+                    ctx.fillStyle = '#FBBF24'; // yellow-400
+                } else {
+                    ctx.fillStyle = '#34D399'; // green-400
+                }
+
+                ctx.fillRect(leftMargin, pos.y - squareSize / 2, squareSize, squareSize);
+            }
+        });
+    });
+</script>
 </body>
 </html>
-
