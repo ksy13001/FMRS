@@ -4,14 +4,15 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.ksy.fmrs.domain.enums.MappingStatus;
-import com.ksy.fmrs.domain.player.FmPlayer;
-import com.ksy.fmrs.domain.player.Player;
+import com.ksy.fmrs.domain.player.*;
 import com.ksy.fmrs.domain.Team;
 import com.ksy.fmrs.dto.nation.NationDto;
 import com.ksy.fmrs.dto.player.FmPlayerDetailsDto;
 import com.ksy.fmrs.dto.player.PlayerDetailsDto;
+import com.ksy.fmrs.dto.search.DetailSearchPlayerResponseDto;
+import com.ksy.fmrs.dto.search.DetailSearchPlayerResultDto;
 import com.ksy.fmrs.dto.search.SearchPlayerCondition;
-import com.ksy.fmrs.dto.search.SearchPlayerResponseDto;
+import com.ksy.fmrs.dto.search.SearchPlayersResultDto;
 import com.ksy.fmrs.dto.team.TeamPlayersResponseDto;
 import com.ksy.fmrs.repository.Player.PlayerRepository;
 import com.ksy.fmrs.util.StringUtils;
@@ -21,7 +22,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +31,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
@@ -160,7 +161,7 @@ public class PlayerServiceTest {
         // when
         when(playerRepository.searchPlayerByDetailCondition(condition, pageable))
                 .thenReturn(new PageImpl<>(List.of(player1, player2, player3)));
-        SearchPlayerResponseDto actual = playerService.searchPlayerByDetailCondition(condition, pageable);
+        DetailSearchPlayerResultDto actual = playerService.detailSearchPlayers(condition, pageable);
 
         // then
         Assertions.assertThat(actual.getPlayers()).extracting("name")
@@ -186,6 +187,27 @@ public class PlayerServiceTest {
                 .containsOnly("n1", "n2", "n3");
     }
 
+    @Test
+    @DisplayName("상세 검색 시 player - fmplayer 가 매핑되었을 경우 검색 결과에 fmplayer top 3 능력치 포함")
+    void detail_Search_With_MatchedPlayer_contains_Top3Attributes(){
+        // given
+        LocalDate birth = LocalDate.now();
+        Player player = createPlayer("p1", "p1", birth, "n1",  MappingStatus.MATCHED);
+        // top3 능력치 = dribble, pace, vision
+        FmPlayer fmPlayer = createFmFiledPlayer("p1", "p1", birth, "n1");
+        player.updateFmPlayer(fmPlayer);
+        SearchPlayerCondition condition = new SearchPlayerCondition();
+        // when
+        Pageable pageable = PageRequest.of(0, 10);
+        when(playerRepository.searchPlayerByDetailCondition(condition, pageable))
+                .thenReturn(new PageImpl<>(List.of(player)));
+        DetailSearchPlayerResultDto actual = playerService
+                .detailSearchPlayers(condition, pageable);
+        // then
+        Assertions.assertThat(actual.getPlayers().getFirst().getTopAttributes())
+                .containsExactlyInAnyOrder("dribbling", "pace", "vision");
+    }
+
     private Player createPlayer(String firstName, String lastName, LocalDate birth, String nation, MappingStatus mappingStatus) {
         return Player.builder()
                 .firstName(firstName)
@@ -197,12 +219,201 @@ public class PlayerServiceTest {
                 .build();
     }
 
-    private FmPlayer createFmPlayer(String firstName, String lastName, LocalDate birth, String nation) {
+    private FmPlayer createFmFiledPlayer(String firstName, String lastName, LocalDate birth, String nation) {
         return FmPlayer.builder()
                 .firstName(firstName)
                 .lastName(lastName)
                 .birth(birth)
                 .nationName(nation)
+                .position(Position.builder()
+                        .goalkeeper(1)
+                        .defenderCentral(1)
+                        .defenderLeft(1)
+                        .defenderRight(1)
+                        .wingBackLeft(1)
+                        .wingBackRight(1)
+                        .defensiveMidfielder(1)
+                        .midfielderLeft(1)
+                        .midfielderRight(1)
+                        .midfielderCentral(1)
+                        .attackingMidCentral(10)
+                        .attackingMidLeft(5)
+                        .attackingMidRight(8)
+                        .striker(20)
+                        .build())
+                .personalityAttributes(PersonalityAttributes.builder()
+                        .adaptability(15)
+                        .ambition(18)
+                        .loyalty(1)
+                        .pressure(17)
+                        .professional(19)
+                        .sportsmanship(16)
+                        .temperament(15)
+                        .controversy(3)
+                        .build())
+                .technicalAttributes(TechnicalAttributes.builder()
+                        .corners(14)
+                        .crossing(18)
+                        .dribbling(20)
+                        .finishing(1)
+                        .firstTouch(1)
+                        .freeKicks(18)
+                        .heading(12)
+                        .longShots(18)
+                        .longThrows(5)
+                        .marking(10)
+                        .passing(19)
+                        .penaltyTaking(18)
+                        .tackling(10)
+                        .technique(1)
+                        .build())
+                .mentalAttributes(MentalAttributes.builder()
+                        .aggression(10)
+                        .anticipation(1)
+                        .bravery(15)
+                        .composure(18)
+                        .concentration(16)
+                        .decisions(19)
+                        .determination(1)
+                        .flair(1)
+                        .leadership(13)
+                        .offTheBall(1)
+                        .positioning(13)
+                        .teamwork(17)
+                        .vision(20)
+                        .workRate(15)
+                        .build())
+                .physicalAttributes(PhysicalAttributes.builder()
+                        .acceleration(19)
+                        .agility(19)
+                        .balance(1)
+                        .jumpingReach(8)
+                        .naturalFitness(17)
+                        .pace(20)
+                        .stamina(17)
+                        .strength(13)
+                        .build())
+                .goalKeeperAttributes(GoalKeeperAttributes.builder()
+                        .aerialAbility(1)
+                        .commandOfArea(1)
+                        .communication(1)
+                        .eccentricity(1)
+                        .handling(1)
+                        .kicking(1)
+                        .oneOnOnes(1)
+                        .reflexes(1)
+                        .rushingOut(1)
+                        .tendencyToPunch(1)
+                        .throwing(1)
+                        .build())
+                .hiddenAttributes(HiddenAttributes.builder()
+                        .consistency(19)
+                        .dirtiness(3)
+                        .importantMatches(20)
+                        .injuryProneness(8)
+                        .versatility(15)
+                        .build())
+                .currentAbility(190)
+                .potentialAbility(195)
+                .build();
+    }
+
+    private FmPlayer createFmGKPlayer(String firstName, String lastName, LocalDate birth, String nation) {
+        return FmPlayer.builder()
+                .firstName(firstName)
+                .lastName(lastName)
+                .birth(birth)
+                .nationName(nation)
+                .position(Position.builder()
+                        .goalkeeper(20)
+                        .defenderCentral(1)
+                        .defenderLeft(1)
+                        .defenderRight(1)
+                        .wingBackLeft(1)
+                        .wingBackRight(1)
+                        .defensiveMidfielder(1)
+                        .midfielderLeft(1)
+                        .midfielderRight(1)
+                        .midfielderCentral(1)
+                        .attackingMidCentral(1)
+                        .attackingMidLeft(1)
+                        .attackingMidRight(1)
+                        .striker(1)
+                        .build())
+                .personalityAttributes(PersonalityAttributes.builder()
+                        .adaptability(15)
+                        .ambition(18)
+                        .loyalty(20)
+                        .pressure(17)
+                        .professional(19)
+                        .sportsmanship(16)
+                        .temperament(15)
+                        .controversy(3)
+                        .build())
+                .technicalAttributes(TechnicalAttributes.builder()
+                        .corners(1)
+                        .crossing(1)
+                        .dribbling(1)
+                        .finishing(1)
+                        .firstTouch(1)
+                        .freeKicks(1)
+                        .heading(1)
+                        .longShots(1)
+                        .longThrows(1)
+                        .marking(1)
+                        .passing(1)
+                        .penaltyTaking(1)
+                        .tackling(1)
+                        .technique(1)
+                        .build())
+                .mentalAttributes(MentalAttributes.builder()
+                        .aggression(10)
+                        .anticipation(20)
+                        .bravery(15)
+                        .composure(18)
+                        .concentration(16)
+                        .decisions(19)
+                        .determination(20)
+                        .flair(20)
+                        .leadership(13)
+                        .offTheBall(20)
+                        .positioning(13)
+                        .teamwork(17)
+                        .vision(20)
+                        .workRate(15)
+                        .build())
+                .physicalAttributes(PhysicalAttributes.builder()
+                        .acceleration(19)
+                        .agility(19)
+                        .balance(20)
+                        .jumpingReach(8)
+                        .naturalFitness(17)
+                        .pace(19)
+                        .stamina(17)
+                        .strength(13)
+                        .build())
+                .goalKeeperAttributes(GoalKeeperAttributes.builder()
+                        .aerialAbility(20)
+                        .commandOfArea(20)
+                        .communication(20)
+                        .eccentricity(1)
+                        .handling(1)
+                        .kicking(1)
+                        .oneOnOnes(1)
+                        .reflexes(1)
+                        .rushingOut(1)
+                        .tendencyToPunch(1)
+                        .throwing(1)
+                        .build())
+                .hiddenAttributes(HiddenAttributes.builder()
+                        .consistency(19)
+                        .dirtiness(3)
+                        .importantMatches(20)
+                        .injuryProneness(8)
+                        .versatility(15)
+                        .build())
+                .currentAbility(190)
+                .potentialAbility(195)
                 .build();
     }
 }

@@ -3,8 +3,10 @@ package com.ksy.fmrs.controller;
 import com.ksy.fmrs.domain.enums.MappingStatus;
 import com.ksy.fmrs.dto.nation.NationDto;
 import com.ksy.fmrs.dto.player.PlayerOverviewDto;
+import com.ksy.fmrs.dto.search.DetailSearchPlayerResultDto;
 import com.ksy.fmrs.dto.search.SearchPlayerCondition;
-import com.ksy.fmrs.dto.search.SearchPlayerResponseDto;
+import com.ksy.fmrs.dto.search.SearchPlayersResultDto;
+import com.ksy.fmrs.dto.search.SimpleSearchPlayerResultDto;
 import com.ksy.fmrs.service.PlayerFacadeService;
 import com.ksy.fmrs.service.PlayerService;
 import lombok.RequiredArgsConstructor;
@@ -34,23 +36,22 @@ public class PlayerController {
     }
 
     @GetMapping("/api/search/simple-player/{name}")
-    public SearchPlayerResponseDto searchPlayerByName(
+    public SimpleSearchPlayerResultDto searchPlayerByName(
             @PathVariable String name,
             @PageableDefault Pageable pageable,
             @RequestParam(required = false) Long lastPlayerId,
             @RequestParam(required = false) Integer lastCurrentAbility,
             @RequestParam(required = false) MappingStatus lastMappingStatus
     ) {
-        return playerService.searchPlayerByName(name, pageable, lastPlayerId, lastCurrentAbility, lastMappingStatus);
+        return playerService.simpleSearchPlayers(name, pageable, lastPlayerId, lastCurrentAbility, lastMappingStatus);
     }
 
     @GetMapping("/api/search/detail-player")
-    public SearchPlayerResponseDto searchPlayerByDetailConditionResult(
+    public DetailSearchPlayerResultDto searchPlayerByDetailConditionResult(
             @ModelAttribute SearchPlayerCondition searchPlayerCondition,
             @PageableDefault Pageable pageable
     ) {
-        log.info("searchPlayerByDetailConditionResult: dribble={}", searchPlayerCondition.getDribbling());
-        return playerService.searchPlayerByDetailCondition(searchPlayerCondition, pageable);
+        return playerService.detailSearchPlayers(searchPlayerCondition, pageable);
     }
 
     @GetMapping("/api/nations")

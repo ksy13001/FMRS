@@ -1,39 +1,39 @@
 package com.ksy.fmrs.repository.Player;
 
+import com.ksy.fmrs.config.TestQueryDSLConfig;
+import com.ksy.fmrs.config.TestTimeProviderConfig;
 import com.ksy.fmrs.domain.enums.MappingStatus;
 import com.ksy.fmrs.domain.player.*;
-import jakarta.persistence.EntityManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-@ActiveProfiles("test")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@Import(TestQueryDSLConfig.class)
+@DataJpaTest
 class FmPlayerRepositoryTest {
 
     @Autowired
     private FmPlayerRepository fmPlayerRepository;
 
     @Autowired
-    private EntityManager em;
+    private TestEntityManager tem;
 
     @Test
     @DisplayName("fm 데이터 복합키로 find 테스트")
-    @Transactional
     void findFmPlayerByFirstNameAndLastNameAndBirthAndNationName() {
         // given
         LocalDate date = LocalDate.now();
         FmPlayer fm1 = createFmPlayer("fm1", "fm2", date, "n1");
-        em.persist(fm1);
-        em.close();
+        tem.persistAndFlush(fm1);
         // when
         List<FmPlayer> fmPlayerList = fmPlayerRepository.findFmPlayerByFirstNameAndLastNameAndBirthAndNationName(
                 "fm1",
@@ -47,18 +47,17 @@ class FmPlayerRepositoryTest {
 
     @Test
     @DisplayName("1000 개 player 매핑 성능 테스트")
-    @Transactional
-    void 메서드명(){
+    void mapping_player_test(){
         // given
         LocalDate date = LocalDate.now();
         for(int i=0;i<1000;i++){
             Player player = createPlayer("fn"+i, "ln"+i, date, "nation"+i);
             FmPlayer fmPlayer = createFmPlayer("fn"+i, "ln"+i, date, "nation"+i);
-            em.persist(player);
-            em.persist(fmPlayer);
+            tem.persist(player);
+            tem.persist(fmPlayer);
         }
-        em.clear();
-        em.close();
+        tem.flush();
+        tem.clear();
         List<FmPlayer> actual = new ArrayList<>();
         // when
         long startTime = System.currentTimeMillis();
@@ -77,6 +76,16 @@ class FmPlayerRepositoryTest {
         System.out.println("실행 시간 : " + (endTime-startTime) + "ms");
         // 인덱스 미적용 시: 319272ms - 5분 32초
         // 인덱스 적용 시 : 6335ms - 6초
+    }
+
+    @Test
+    @DisplayName("테스트설명")
+    void 메서드명() throws Exception{
+        // given
+
+        // when
+
+        // then
     }
 
     private Player createPlayer(String firstName, String lastName, LocalDate birth, String nation){

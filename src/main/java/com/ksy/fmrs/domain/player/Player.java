@@ -147,4 +147,8 @@ public class Player {
         }
         return this.fmPlayer.getCurrentAbility();
     }
+
+    public boolean isMatched(){
+        return this.fmPlayer != null && this.mappingStatus == MappingStatus.MATCHED;
+    }
 }

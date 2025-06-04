@@ -12,13 +12,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.*;
 
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity(name = "fmplayer")
-@Table(name = "fmplayer", indexes = @Index(name = "idx_first_name_and_last_name_and_birth_and_nation_name",
-        columnList = "first_name, last_name, birth, nation_name"))
+//@Table(name = "fmplayer", indexes = @Index(name = "idx_first_name_and_last_name_and_birth_and_nation_name",
+//        columnList = "first_name, last_name, birth, nation_name"))
 public class FmPlayer {
 
     @Id
@@ -130,6 +131,27 @@ public class FmPlayer {
                 .currentAbility(fmPlayerDto.getCurrentAbility())
                 .potentialAbility(fmPlayerDto.getPotentialAbility())
                 .build();
+    }
+
+    public Map<String, Integer> getAllAttributes() {
+        Map<String, Integer> allAttributes = new HashMap<>();
+        allAttributes.putAll(this.getTechnicalAttributes().getAllTechnicalAttributes());
+        allAttributes.putAll(this.getMentalAttributes().getAllMentalAttributes());
+        allAttributes.putAll(this.getPhysicalAttributes().getAllPhysicalAttributes());
+        allAttributes.putAll(this.getGoalKeeperAttributes().getAllGoalkeeperAttributes());
+
+        return allAttributes;
+
+    }
+
+    public List<String> getTopNAttributes(int n, Map<String, Integer> allAttributes) {
+        List<String> topNAttributes  = allAttributes.entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .map(Map.Entry::getKey)
+                .toList();
+
+        return topNAttributes.subList(0, Math.min(n, topNAttributes.size()));
     }
 
     public void updateName(String name) {

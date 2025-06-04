@@ -1,14 +1,9 @@
 package com.ksy.fmrs.controller;
 
-import com.ksy.fmrs.dto.search.SearchPlayerResponseDto;
 import com.ksy.fmrs.service.PlayerService;
 import com.ksy.fmrs.service.InitializationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequiredArgsConstructor
 @Controller

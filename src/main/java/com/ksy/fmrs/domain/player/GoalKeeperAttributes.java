@@ -4,6 +4,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.*;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -26,4 +30,20 @@ public class GoalKeeperAttributes {
     @Column(name = "tendency_to_punch")
     private int tendencyToPunch;
     private int throwing;
+
+    public Map<String, Integer> getAllGoalkeeperAttributes() {
+        Map<String, Integer> allAttributes = new HashMap<>();
+        allAttributes.put("aerial ability", aerialAbility);
+        allAttributes.put("command of area", commandOfArea);
+        allAttributes.put("communication", communication);
+        allAttributes.put("eccentricity", eccentricity);
+        allAttributes.put("handling", handling);
+        allAttributes.put("kicking", kicking);
+        allAttributes.put("one on ones", oneOnOnes);
+        allAttributes.put("reflexes", reflexes);
+        allAttributes.put("rushing out", rushingOut);
+        allAttributes.put("tendency to punch", tendencyToPunch);
+        allAttributes.put("throwing", throwing);
+        return allAttributes;
+    }
 }
